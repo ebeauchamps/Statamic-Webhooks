@@ -9,7 +9,7 @@ class Hooks_webhooks extends Hooks
 	public function webhooks__go()
 	{
 		// Back out if the API isn't supplied or is incorrect
-		if (Request::get('api_key') != $this->fetchConfig('api_key', Helper::getRandomString())) {
+		if (Request::get('api_key') != $this->fetchConfig('api_key', Helper::getRandomString(), null, false, false)) {
 			$app = \Slim\Slim::getInstance();
 			$app->halt(403, 'Invalid API key.');
 		}
@@ -28,6 +28,11 @@ class Hooks_webhooks extends Hooks
 			// Clear rendered html cache
 			$this->clearHtmlCache();
 		}
+
+		if ($this->config['clear_tag_cache']) {
+			// Clear {{ cache }} template tag cache
+			$this->clearTagCache();
+		}
 	}
 
 
@@ -36,8 +41,12 @@ class Hooks_webhooks extends Hooks
 
 	private function clearStatamicCache()
 	{
-		$cache_folder = BASE_PATH . '/_cache/_app/';
-		Folder::delete($cache_folder, true);
+		$app_cache_folder = BASE_PATH . '/_cache/_app/';
+		Folder::delete($app_cache_folder, true);
+		
+		$tag_cache_folder = BASE_PATH . '/_cache/_add-ons/cache/';
+		Folder::delete($tag_cache_folder, true);
+		
 		$this->log->info('Statamic\'s cache has been cleared.');
 	}
 
@@ -54,4 +63,10 @@ class Hooks_webhooks extends Hooks
 		$this->log->info('Rendered HTML cache has been cleared.');
 	}
 
+	private function clearTagCache()
+	{
+		$cache_folder = BASE_PATH . '/_cache/_add-ons/cache/';
+		Folder::delete($cache_folder, true);
+		$this->log->info('Template tag cache has been cleared.');
+	}
 }
